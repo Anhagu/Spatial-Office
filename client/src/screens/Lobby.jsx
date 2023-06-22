@@ -35,6 +35,14 @@ const LobbyScreen = () => {
     };
   }, [socket, handleJoinRoom]);
 
+  // 로그인 세션 확인 및 이메일 업데이트
+  useEffect(() => {
+    const loggedInEmail = localStorage.getItem("email");
+    if (loggedInEmail) {
+      setEmail(loggedInEmail);
+    }
+  }, []);
+
   return (
     <div>
       <h1>Lobby</h1>
