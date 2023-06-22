@@ -1,74 +1,97 @@
-import React, { useState } from "react";
+import React, { useState } from 'react';
+import { NavLink, useNavigate } from 'react-router-dom';
+import { createUserWithEmailAndPassword } from 'firebase/auth';
+import { auth, db } from '../firebase'; // db 추가
+import { collection, addDoc } from 'firebase/firestore'; // Firestore 모듈 추가
 
-const SignUp = () => {
-  const [username, setUsername] = useState("");
-  const [password, setPassword] = useState("");
-  const [name, setName] = useState("");
-  const [color, setColor] = useState("#000000");
+const Signup = () => {
+    const navigate = useNavigate();
 
-  const handleColorChange = (e) => {
-    setColor(e.target.value);
-  };
+    const [email, setEmail] = useState('')
+    const [password, setPassword] = useState('');
 
-  const handleSubmit = (e) => {
-    e.preventDefault();
-    // 회원가입 로직 구현
-    // 서버로 데이터 전송 등
-    console.log("Username:", username);
-    console.log("Password:", password);
-    console.log("Name:", name);
-    console.log("Color:", color);
-    // ...
-  };
+    const onSubmit = async (e) => {
+        e.preventDefault()
 
-  return (
-    <div>
-      <h2>회원가입</h2>
-      <form onSubmit={handleSubmit}>
-        <div>
-          <label htmlFor="username">아이디</label>
-          <input
-            type="text"
-            id="username"
-            value={username}
-            onChange={(e) => setUsername(e.target.value)}
-            required
-          />
-        </div>
-        <div>
-          <label htmlFor="password">비밀번호</label>
-          <input
-            type="password"
-            id="password"
-            value={password}
-            onChange={(e) => setPassword(e.target.value)}
-            required
-          />
-        </div>
-        <div>
-          <label htmlFor="name">이름</label>
-          <input
-            type="text"
-            id="name"
-            value={name}
-            onChange={(e) => setName(e.target.value)}
-            required
-          />
-        </div>
-        <div>
-          <label htmlFor="color">색상 선택</label>
-          <input
-            type="color"
-            id="color"
-            value={color}
-            onChange={handleColorChange}
-            required
-          />
-        </div>
-        <button type="submit">가입하기</button>
-      </form>
-    </div>
-  );
-};
+        await createUserWithEmailAndPassword(auth, email, password)
+            .then((userCredential) => {
+                // Signed in
+                const user = userCredential.user;
+                console.log(user);
 
-export default SignUp;
+                // Firestore에 사용자 정보 추가
+                const userDocRef = collection(db, 'users'); // users 컬렉션 참조
+                const userData = { email: user.email }; // 사용자 정보
+                addDoc(userDocRef, userData) // Firestore에 데이터 추가
+
+                navigate("/login")
+                // ...
+            })
+            .catch((error) => {
+                const errorCode = error.code;
+                const errorMessage = error.message;
+                console.log(errorCode, errorMessage);
+                // ..
+            });
+
+
+    }
+
+    return (
+        <main >
+            <section>
+                <div>
+                    <div>
+                        <h1> FocusApp </h1>
+                        <form>
+                            <div>
+                                <label htmlFor="email-address">
+                                    Email address
+                                </label>
+                                <input
+                                    type="email"
+                                    label="Email address"
+                                    value={email}
+                                    onChange={(e) => setEmail(e.target.value)}
+                                    required
+                                    placeholder="Email address"
+                                />
+                            </div>
+
+                            <div>
+                                <label htmlFor="password">
+                                    Password
+                                </label>
+                                <input
+                                    type="password"
+                                    label="Create password"
+                                    value={password}
+                                    onChange={(e) => setPassword(e.target.value)}
+                                    required
+                                    placeholder="Password"
+                                />
+                            </div>
+
+                            <button
+                                type="submit"
+                                onClick={onSubmit}
+                            >
+                                Sign up
+                            </button>
+
+                        </form>
+
+                        <p>
+                            이미 계정이 있으신가요?{' '}
+                            <NavLink to="/login" >
+                                Sign in
+                            </NavLink>
+                        </p>
+                    </div>
+                </div>
+            </section>
+        </main>
+    )
+}
+
+export default Signup
