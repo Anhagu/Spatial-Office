@@ -9,6 +9,7 @@ const Signup = () => {
 
     const [email, setEmail] = useState('')
     const [password, setPassword] = useState('');
+    const [userColor, setUserColor] = useState('');
 
     const onSubmit = async (e) => {
         e.preventDefault()
@@ -21,7 +22,7 @@ const Signup = () => {
 
                 // Firestore에 사용자 정보 추가
                 const userDocRef = collection(db, 'users'); // users 컬렉션 참조
-                const userData = { email: user.email }; // 사용자 정보
+                const userData = { email: user.email, userColor: userColor }; // 사용자 정보
                 addDoc(userDocRef, userData) // Firestore에 데이터 추가
 
                 navigate("/login")
@@ -42,11 +43,12 @@ const Signup = () => {
             <section>
                 <div>
                     <div>
-                        <h1> FocusApp </h1>
+                        <h1> Spatial Office </h1>
+                        <h3> 회원가입 </h3>
                         <form>
                             <div>
                                 <label htmlFor="email-address">
-                                    Email address
+                                    이메일
                                 </label>
                                 <input
                                     type="email"
@@ -54,13 +56,13 @@ const Signup = () => {
                                     value={email}
                                     onChange={(e) => setEmail(e.target.value)}
                                     required
-                                    placeholder="Email address"
+                                    placeholder="이메일을 입력해주세요"
                                 />
                             </div>
 
                             <div>
                                 <label htmlFor="password">
-                                    Password
+                                    비밀번호
                                 </label>
                                 <input
                                     type="password"
@@ -68,7 +70,19 @@ const Signup = () => {
                                     value={password}
                                     onChange={(e) => setPassword(e.target.value)}
                                     required
-                                    placeholder="Password"
+                                    placeholder="비밀번호를 입력해주세요"
+                                />
+                            </div>
+
+                            <div>
+                                <label htmlFor="user-color">
+                                    색상 선택
+                                </label>
+                                <input
+                                    type="color"
+                                    id="user-color"
+                                    value={userColor}
+                                    onChange={(e) => setUserColor(e.target.value)}
                                 />
                             </div>
 
@@ -76,7 +90,7 @@ const Signup = () => {
                                 type="submit"
                                 onClick={onSubmit}
                             >
-                                Sign up
+                                가입
                             </button>
 
                         </form>
@@ -84,7 +98,7 @@ const Signup = () => {
                         <p>
                             이미 계정이 있으신가요?{' '}
                             <NavLink to="/login" >
-                                Sign in
+                                로그인
                             </NavLink>
                         </p>
                     </div>

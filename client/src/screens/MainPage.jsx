@@ -1,10 +1,15 @@
-import React from "react";
+import React, { useEffect } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 
 const MainPage = () => {
   const navigate = useNavigate();
   const location = useLocation();
-  const email = location.state?.email || ''; // 변경된 부분: 전달된 email 값을 받아옴
+  const email = location.state?.email || '';
+
+  useEffect(() => {
+    // 로그인된 사용자의 이메일을 출력
+    console.log("Logged-in user's email:", email);
+  }, [email]);
 
   const handleButtonClick = () => {
     navigate("/lobby");
@@ -30,7 +35,7 @@ const MainPage = () => {
       <button onClick={handleSignupClick}>Signup</button>
       <button onClick={handleOfficeClick}>시작하기</button>
 
-      {email && <p>Welcome, {email}!</p>} {/* 변경된 부분: email 값을 출력 */}
+      {email && <p>Welcome, {email}!</p>}
     </div>
   );
 };
