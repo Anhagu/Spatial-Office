@@ -34,11 +34,19 @@ const RoomPage = () => {
   };
 
 
-  const handleUserJoined = useCallback(({ email, id }) => {
-    console.log(`Email ${email} joined room`);
-    setRemoteSocketId(id);
-  }, []);
+  const handleUserJoined = useCallback(async ({ email, id }) => {
+  console.log(`Email ${email} joined room`);
+  setRemoteSocketId(id);
 
+  // 새로운 사용자가 방에 들어오면 자동으로 호출을 시작
+  const stream = await navigator.mediaDevices.getUserMedia({
+    audio: true,
+    video: true,
+  });
+  const offer = await peer.getOffer();
+  socket.emit("user:call", { to: id, offer });
+  setMyStream(stream);
+}, [socket]);
   const handleCallUser = useCallback(async () => {
     const stream = await navigator.mediaDevices.getUserMedia({
       audio: true,
@@ -149,7 +157,6 @@ const RoomPage = () => {
           <h1>My Stream</h1>
           <ReactPlayer
             playing
-            muted
             height="100px"
             width="200px"
             url={myStream}
@@ -161,7 +168,6 @@ const RoomPage = () => {
           <h1>Remote Stream</h1>
           <ReactPlayer
             playing
-            muted
             height="100px"
             width="200px"
             url={remoteStream}
@@ -173,7 +179,6 @@ const RoomPage = () => {
           <h1>Screen Stream</h1>
           <ReactPlayer
             playing
-            muted
             height="100px"
             width="200px"
             url={screenStream}
