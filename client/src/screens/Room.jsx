@@ -9,6 +9,31 @@ const RoomPage = () => {
   const [myStream, setMyStream] = useState();
   const [remoteStream, setRemoteStream] = useState();
 
+  const [screenSharing, setScreenSharing] = useState(false);
+  const [screenStream, setScreenStream] = useState(null);
+
+  const toggleScreenSharing = async () => {
+    try {
+      if (!screenSharing) {
+        const stream = await navigator.mediaDevices.getDisplayMedia({ video: true });
+        setScreenStream(stream);
+        peer.peer.addTrack(stream.getTracks()[0], stream); // 화면 공유 스트림을 peer에 추가합니다
+      } else {
+        screenStream.getTracks().forEach((track) => track.stop()); // 화면 공유 스트림의 트랙을 중지합니다
+        peer.peer.getSenders().forEach((sender) => {
+          if (sender.track === screenStream.getTracks()[0]) {
+            peer.peer.removeTrack(sender); // peer에서 화면 공유 스트림의 트랙을 제거합니다
+          }
+        });
+        setScreenStream(null);
+      }
+      setScreenSharing(!screenSharing);
+    } catch (error) {
+      console.error("Error accessing screen:", error);
+    }
+  };
+
+
   const handleUserJoined = useCallback(({ email, id }) => {
     console.log(`Email ${email} joined room`);
     setRemoteSocketId(id);
@@ -115,6 +140,10 @@ const RoomPage = () => {
       <h4>{remoteSocketId ? "Connected" : "No one in room"}</h4>
       {myStream && <button onClick={sendStreams}>Send Stream</button>}
       {remoteSocketId && <button onClick={handleCallUser}>CALL</button>}
+      <button onClick={toggleScreenSharing}>
+        {screenSharing ? "Stop Sharing" : "Share Screen"}
+      </button>
+      <p>{screenSharing ? "Screen is being shared" : ""}</p>
       {myStream && (
         <>
           <h1>My Stream</h1>
@@ -136,6 +165,18 @@ const RoomPage = () => {
             height="100px"
             width="200px"
             url={remoteStream}
+          />
+        </>
+      )}
+      {screenStream && (
+        <>
+          <h1>Screen Stream</h1>
+          <ReactPlayer
+            playing
+            muted
+            height="100px"
+            width="200px"
+            url={screenStream}
           />
         </>
       )}
