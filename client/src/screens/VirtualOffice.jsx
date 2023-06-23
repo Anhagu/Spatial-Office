@@ -6,14 +6,14 @@ const BOARD_SIZE = 30;
 const OFFICES = [
   { x: 20, y: 0, width: 15, height: 13, color: 'yellow', roomnumber: 3 },  // No action for this office
   { x: 0, y: 20, width: 20, height: 10, color: 'lightblue', roomnumber: 2 },
-  { x: 0, y: 0, width:20, height: 10, color: 'lightgreen', roomnumber: 4 },
+  { x: 0, y: 0, width: 20, height: 10, color: 'lightgreen', roomnumber: 4 },
   { x: 10, y: 10, width: 10, height: 10, color: 'lightgray' },  // No action for this office
   { x: 20, y: 5, width: 10, height: 25, color: 'lightsalmon', roomnumber: 1 },
-  { x: 0, y: 10, width: 10, height: 5, color: 'cyan'},
+  { x: 0, y: 10, width: 10, height: 5, color: 'cyan' },
   { x: 0, y: 15, width: 1, height: 5, color: 'red', goBack: true },
 ];
 
-const emojis = ["😀", "😃", "😄", "😁", "😆", "😅", "😂", "🤣", "😊", "😇","😉", "😌", "😍", "🥰", "😘", "😗", "😙", "😚", "🙂", "🤗",
+const emojis = ["😀", "😃", "😄", "😁", "😆", "😅", "😂", "🤣", "😊", "😇", "😉", "😌", "😍", "🥰", "😘", "😗", "😙", "😚", "🙂", "🤗",
   "🤩", "🤔", "🤨", "😐", "😑", "😶", "😏", "😒", "🙄", "😬",
   "🤥", "😌", "😔", "😪", "🤤", "😴", "😷", "🤒", "🤕", "🤢",
   "🤮", "🤧", "😵", "🤯", "🥵", "😰", "😨", "😥", "🥴", "😓",
@@ -31,7 +31,7 @@ const Sidebar = ({ userEmail, onLogout, isTimerPaused, onPauseTimer, onResumeTim
   const [time, setTime] = useState(0);
   const [pauseTime, setPauseTime] = useState(null);
 
-  
+
   useEffect(() => {
     const loginTime = localStorage.getItem('loginTime');
 
@@ -67,19 +67,48 @@ const Sidebar = ({ userEmail, onLogout, isTimerPaused, onPauseTimer, onResumeTim
     const hours = Math.floor(seconds / 3600);
     const minutes = Math.floor((seconds % 3600) / 60);
     const secs = seconds % 60;
-    
+
     return [hours, minutes, secs].map(v => v < 10 ? '0' + v : v).join(':');
   }
-  
-  
+
+
 
   return (
-    <div style={{ position: 'absolute', right: 0, padding: 20 }}>
-      <h1>반갑습니다 {userEmail} 님!</h1>
-      <h2>업무시간: {secondsToHMS(time)}</h2>
-      {!isTimerPaused ? (
+    <>
+      <div style={{ position: 'absolute', right: 100, top: 200, padding: 20 }}>
+        <h1>반갑습니다 {userEmail} 님!</h1>
+        <h2>업무시간: {secondsToHMS(time)}</h2>
+        {!isTimerPaused ? (
+          <button
+            onClick={onPauseTimer}
+            style={{
+              borderRadius: '10px',
+              padding: '10px 20px',
+              fontSize: '16px',
+              backgroundColor: '#0379E5',
+              color: '#ffffff',
+              cursor: 'pointer',
+            }}
+          >
+            타이머 일시 정지
+          </button>
+        ) : (
+          <button
+            onClick={onResumeTimer}
+            style={{
+              borderRadius: '10px',
+              padding: '10px 20px',
+              fontSize: '16px',
+              backgroundColor: '#0379E5',
+              color: '#ffffff',
+              cursor: 'pointer',
+            }}
+          >
+            타이머 재개
+          </button>
+        )}
         <button
-          onClick={onPauseTimer}
+          onClick={handleLogout}
           style={{
             borderRadius: '10px',
             padding: '10px 20px',
@@ -89,37 +118,28 @@ const Sidebar = ({ userEmail, onLogout, isTimerPaused, onPauseTimer, onResumeTim
             cursor: 'pointer',
           }}
         >
-          타이머 일시 정지
+          업무종료
         </button>
-      ) : (
-        <button
-          onClick={onResumeTimer}
-          style={{
-            borderRadius: '10px',
-            padding: '10px 20px',
-            fontSize: '16px',
-            backgroundColor: '#0379E5',
-            color: '#ffffff',
-            cursor: 'pointer',
-          }}
-        >
-          타이머 재개
-        </button>
-      )}
-      <button
-        onClick={handleLogout}
-        style={{
-          borderRadius: '10px',
-          padding: '10px 20px',
-          fontSize: '16px',
-          backgroundColor: '#0379E5',
-          color: '#ffffff',
-          cursor: 'pointer',
-        }}
-      >
-        업무종료
-      </button>
-    </div>
+      </div>
+      <div style={{ position: 'absolute', left: 500, bottom: 180, padding: 20 }}>
+        <h1>회의실 1</h1>
+      </div>
+      <div style={{ position: 'absolute', left: 160, bottom: 80, padding: 20 }}>
+        <h1>회의실 2</h1>
+      </div>
+      <div style={{ position: 'absolute', left: 500, top: 80, padding: 20 }}>
+        <h1>회의실 3</h1>
+      </div>
+      <div style={{ position: 'absolute', left: 150, top: 50, padding: 20 }}>
+        <h1>회의실 4</h1>
+      </div>
+      <div style={{ position: 'absolute', left: 45, top: 220, padding: 20 }}>
+        <h1>휴게실</h1>
+      </div>
+      <div style={{ position: 'absolute', left: 280, top: 220, padding: 20 }}>
+        <h1>사무실</h1>
+      </div>
+    </>
   );
 };
 
@@ -212,7 +232,7 @@ const VirtualOffice = () => {
   useEffect(() => {
     let shouldGoBack = false;
     let shouldPauseTimer = false;
-  
+
     for (let office of OFFICES) {
       if (
         position[0] >= office.x && position[1] >= office.y &&
@@ -221,14 +241,14 @@ const VirtualOffice = () => {
         if (office.goBack) {
           shouldGoBack = true;
         }
-        
+
         // Check if the current office has a color of 'cyan'
         if (office.color === 'cyan') {
           shouldPauseTimer = true;
         }
       }
     }
-  
+
     if (shouldGoBack) {
       window.history.back();
     }
@@ -238,7 +258,7 @@ const VirtualOffice = () => {
     } else {
       handleTimerResume();
     }
-  
+
     // If the position is in the 'cyan' office, pause the timer
     setIsTimerPaused(shouldPauseTimer);
   }, [position]);
@@ -296,7 +316,7 @@ const VirtualOffice = () => {
           key={key}
           style={{
             backgroundColor: color,
-            border: "1px solid black",
+            // border: "1px solid black",
             width: `${tileSize}px`,
             height: `${tileSize}px`,
             boxSizing: "border-box",
@@ -315,7 +335,7 @@ const VirtualOffice = () => {
     return color;
   }
 
-  
+
 
   function stringToColor(str) {
     let hash = 0;
