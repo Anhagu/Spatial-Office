@@ -1,4 +1,4 @@
-import React, { useEffect } from "react";
+import React, { useEffect, useState } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import styled from 'styled-components';
 
@@ -6,8 +6,13 @@ const MainPage = () => {
   const navigate = useNavigate();
   const location = useLocation();
   const email = location.state?.email || '';
+  const [isLoggedIn, setIsLoggedIn] = useState(false);
 
   useEffect(() => {
+
+    // 사용자가 로그인되었는지 확인합니다
+    setIsLoggedIn(!!email);
+
     // 로그인된 사용자의 이메일을 출력
     console.log("Logged-in user's email:", email);
 
@@ -28,7 +33,11 @@ const MainPage = () => {
   };
 
   const handleOfficeClick = () => {
-    navigate("/virtualoffice");
+    if (isLoggedIn) {
+      navigate("/virtualoffice");
+    } else {
+      navigate("/login");
+    }
   };
 
   return (
@@ -49,10 +58,9 @@ const MainPage = () => {
         </ContentContainer>
 
         <FaceCallButton onClick={handleButtonClick}>화상통화방</FaceCallButton>
-        <div style={{display:"flex", justifyContent:"center", alignItem:"center", backgroundColor: "#34d188", height:"196 px"}}>
+        <div style={{ display: "flex", justifyContent: "center", alignItem: "center", backgroundColor: "#34d188", height: "196 px" }}>
           <ConnectOfficeButton onClick={handleOfficeClick}>시작하기</ConnectOfficeButton>
         </div>
-        {email && <p>Welcome, {email}!</p>}
       </Container>
     </div>
   );

@@ -20,7 +20,8 @@ const Login = () => {
       .catch((error) => {
         const errorCode = error.code;
         const errorMessage = error.message;
-        console.log(errorCode, errorMessage)
+        console.log(errorCode, errorMessage);
+        alert('입력하신 계정은 존재하지 않습니다. \n다시 입력해주세요.');
       });
   }
 
