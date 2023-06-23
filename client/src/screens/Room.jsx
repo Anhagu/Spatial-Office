@@ -12,6 +12,9 @@ const RoomPage = () => {
   const [screenSharing, setScreenSharing] = useState(false);
   const [screenStream, setScreenStream] = useState(null);
 
+  const [messages, setMessages] = useState([]);
+  const [newMessage, setNewMessage] = useState('');
+
   const toggleScreenSharing = async () => {
     try {
       if (!screenSharing) {
@@ -141,6 +144,20 @@ const RoomPage = () => {
     handleNegoNeedIncomming,
     handleNegoNeedFinal,
   ]);
+  const handleSendMessage = (e) => {
+    e.preventDefault();
+    socket.emit('chatMessage', newMessage);
+    setNewMessage('');
+  };
+  useEffect(() => {
+    socket.on('chatMessage', (message) => {
+      setMessages((prevMessages) => [...prevMessages, message]);
+    });
+
+    return () => {
+      socket.off('chatMessage');
+    };
+  }, [socket]);
 
   return (
     <div>
@@ -185,6 +202,19 @@ const RoomPage = () => {
           />
         </>
       )}
+      <form onSubmit={handleSendMessage}>
+        <input
+          type="text"
+          value={newMessage}
+          onChange={(e) => setNewMessage(e.target.value)}
+        />
+        <button type="submit">Send</button>
+      </form>
+      <ul>
+        {messages.map((message, index) => (
+          <li key={index}>{message}</li>
+        ))}
+      </ul>
     </div>
   );
 };

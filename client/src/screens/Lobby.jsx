@@ -1,5 +1,5 @@
 import React, { useState, useCallback, useEffect } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useLocation } from "react-router-dom";
 import { useSocket } from "../context/SocketProvider";
 
 const LobbyScreen = () => {
@@ -9,6 +9,22 @@ const LobbyScreen = () => {
 
   const socket = useSocket(); // SocketProvider 컨텍스트에서 소켓 인스턴스에 접근
   const navigate = useNavigate(); // react-router-dom의 navigate 함수에 접근하여 다른 경로로 이동
+  const location = useLocation(); // react-router-dom의 useLocation 함수에 접근하여 현재 경로의 상태를 확인
+
+  // 로그인 세션 확인 및 이메일 업데이트
+  useEffect(() => {
+    const loggedInEmail = localStorage.getItem("email");
+    if (loggedInEmail) {
+      setEmail(loggedInEmail);
+    }
+  }, []);
+
+  // roomnumber 값이 있을 경우 방 번호 업데이트
+  useEffect(() => {
+    if (location.state?.roomnumber) {
+      setRoom(location.state.roomnumber);
+    }
+  }, [location]);
 
   // 폼 제출 처리 함수
   const handleSubmitForm = useCallback(
@@ -35,14 +51,6 @@ const LobbyScreen = () => {
     };
   }, [socket, handleJoinRoom]);
 
-  // 로그인 세션 확인 및 이메일 업데이트
-  useEffect(() => {
-    const loggedInEmail = localStorage.getItem("email");
-    if (loggedInEmail) {
-      setEmail(loggedInEmail);
-    }
-  }, []);
-
   return (
     <div>
       <h1>Lobby</h1>
@@ -64,6 +72,7 @@ const LobbyScreen = () => {
         />
         <br />
         <button>Join</button>
+        <button type="button" onClick={() => navigate(-1)}>뒤로가기</button>
       </form>
     </div>
   );

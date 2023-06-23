@@ -3,11 +3,33 @@ import { useNavigate } from 'react-router-dom';
 import io from 'socket.io-client';
 
 const BOARD_SIZE = 30;
-const OFFICE_SIZE = 10;
-const RED_TILE_POSITION = [5, 5];
+const OFFICES = [
+  { x: 20, y: 0, width: 15, height: 13, color: 'yellow',roomnumber: 3 },  // No action for this office
+  { x: 0, y: 20, width: 20, height: 10, color: 'lightblue', roomnumber: 2 },
+  { x: 0, y: 0, width:20, height: 10, color: 'lightgreen', roomnumber: 4 },
+  { x: 10, y: 10, width: 10, height: 10, color: 'lightgray' },  // No action for this office
+  { x: 20, y: 10, width: 10, height: 20, color: 'lightsalmon', roomnumber: 1 },
+  { x: 0, y: 10, width: 10, height: 5, color: 'cyan'},
+  { x: 0, y: 15, width: 1, height: 5, color: 'red', goBack: true },
+];
+
+const emojis = ["😀", "😃", "😄", "😁", "😆", "😅", "😂", "🤣", "😊", "😇","😉", "😌", "😍", "🥰", "😘", "😗", "😙", "😚", "🙂", "🤗",
+  "🤩", "🤔", "🤨", "😐", "😑", "😶", "😏", "😒", "🙄", "😬",
+  "🤥", "😌", "😔", "😪", "🤤", "😴", "😷", "🤒", "🤕", "🤢",
+  "🤮", "🤧", "😵", "🤯", "🥵", "😰", "😨", "😥", "🥴", "😓",
+  "🤠", "👽", "🤡", "💀", "👻", "👺", "🤖", "👾", "🎃", "😺",
+  "😸", "😹", "😻", "😼", "😽", "🙀", "😿", "😾", "🙈", "🙉",]; // 여기에 원하는 이모지를 추가하세요.
+
+function getEmojiFromId(id) {
+  const hash = id.split("").reduce((acc, char) => char.charCodeAt(0) + ((acc << 5) - acc), 0);
+  return emojis[Math.abs(hash) % emojis.length];
+}
+
+
+const START_POSITION = [11, 16]; 
 
 const VirtualOffice = () => {
-  const [position, setPosition] = useState([0, 0]);
+  const [position, setPosition] = useState(START_POSITION);
   const [tileSize, setTileSize] = useState(
     Math.min(Math.floor(window.innerWidth / BOARD_SIZE), Math.floor(window.innerHeight / BOARD_SIZE))
   );
@@ -59,6 +81,24 @@ const VirtualOffice = () => {
       window.removeEventListener("resize", handleResize);
     };
   }, []);
+  useEffect(() => {
+    let shouldGoBack = false;
+    // Check if the position is in the 'go back' office area
+    for (let office of OFFICES) {
+      if (
+        position[0] >= office.x && position[1] >= office.y &&
+        position[0] < office.x + office.width && position[1] < office.y + office.height &&
+        office.goBack
+      ) {
+        shouldGoBack = true;
+        break;
+      }
+    }
+  
+    if (shouldGoBack) {
+      window.history.back();
+    }
+  }, [position]);
 
   useEffect(() => {
     const handleUserMove = ({ id, position }) => {
@@ -73,8 +113,21 @@ const VirtualOffice = () => {
   }, []);
 
   useEffect(() => {
-    if (position[0] === RED_TILE_POSITION[0] && position[1] === RED_TILE_POSITION[1]) {
-      navigate("/Lobby");
+    let roomnumber = null;
+    // Check if the position is in any of the office areas with room numbers
+    for (let office of OFFICES) {
+      if (
+        position[0] >= office.x && position[1] >= office.y &&
+        position[0] < office.x + office.width && position[1] < office.y + office.height &&
+        office.roomnumber
+      ) {
+        roomnumber = office.roomnumber;
+        break;
+      }
+    }
+
+    if (roomnumber !== null) {
+      navigate("/Lobby", { state: { roomnumber: roomnumber } });
     }
   }, [position, navigate]);
 
@@ -82,51 +135,26 @@ const VirtualOffice = () => {
   for (let y = 0; y < BOARD_SIZE; y++) {
     for (let x = 0; x < BOARD_SIZE; x++) {
       const key = `${y}-${x}`;
-      if (x === RED_TILE_POSITION[0] && y === RED_TILE_POSITION[1]) {
-        grid.push(
-          <div
-            key={key}
-            style={{
-              backgroundColor: "red",
-              border: "1px solid black",
-              width: `${tileSize}px`,
-              height: `${tileSize}px`,
-              boxSizing: "border-box",
-            }}
-          />
-        );
-      } else if (
-        x >= (BOARD_SIZE - OFFICE_SIZE) / 2 &&
-        y >= (BOARD_SIZE - OFFICE_SIZE) / 2 &&
-        x < (BOARD_SIZE + OFFICE_SIZE) / 2 &&
-        y < (BOARD_SIZE + OFFICE_SIZE) / 2
-      ) {
-        grid.push(
-          <div
-            key={key}
-            style={{
-              backgroundColor: "lightgray",
-              border: "1px solid black",
-              width: `${tileSize}px`,
-              height: `${tileSize}px`,
-              boxSizing: "border-box",
-            }}
-          />
-        );
-      } else {
-        grid.push(
-          <div
-            key={key}
-            style={{
-              backgroundColor: "white",
-              border: "1px solid black",
-              width: `${tileSize}px`,
-              height: `${tileSize}px`,
-              boxSizing: "border-box",
-            }}
-          />
-        );
+      let color = 'white';
+      // Check if the tile is in any of the office areas
+      for (let office of OFFICES) {
+        if (x >= office.x && y >= office.y && x < office.x + office.width && y < office.y + office.height) {
+          color = office.color;
+          break;
+        }
       }
+      grid.push(
+        <div
+          key={key}
+          style={{
+            backgroundColor: color,
+            border: "1px solid black",
+            width: `${tileSize}px`,
+            height: `${tileSize}px`,
+            boxSizing: "border-box",
+          }}
+        />
+      );
     }
   }
 
@@ -158,18 +186,24 @@ const VirtualOffice = () => {
     >
       {grid}
       {Object.entries(positions).map(([id, pos]) => (
-        <div
-          key={id}
-          style={{
-            position: "absolute",
-            left: `${pos[0] * tileSize}px`,
-            top: `${pos[1] * tileSize}px`,
-            backgroundColor: stringToColor(id),
-            width: `${tileSize}px`,
-            height: `${tileSize}px`,
-          }}
-        ></div>
-      ))}
+  <span
+    key={id}
+    style={{
+      position: "absolute",
+      left: `${pos[0] * tileSize}px`,
+      top: `${pos[1] * tileSize}px`,
+      width: `${tileSize}px`,
+      height: `${tileSize}px`,
+      display: "flex",
+      alignItems: "center",
+      justifyContent: "center",
+      fontSize: `${tileSize}px`,
+    }}
+  >
+    {getEmojiFromId(id)}
+  </span>
+))}
+
     </div>
   );
 };

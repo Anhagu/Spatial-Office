@@ -17,7 +17,11 @@ io.on("connection", (socket) => {
     socket.join(room);
     io.to(socket.id).emit("room:join", data);
   });
-  
+
+  socket.on("chatMessage", (message) => {
+    socket.broadcast.emit('chatMessage', message);
+  });
+
   socket.on("user:move", (position) => {
     io.emit("user:move", position);
   });
