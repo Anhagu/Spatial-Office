@@ -27,39 +27,86 @@ function getEmojiFromId(id) {
 
 const START_POSITION = [11, 16];
 
-const Sidebar = ({ userEmail, onLogout }) => {
+const Sidebar = ({ userEmail, onLogout, isTimerPaused, onPauseTimer, onResumeTimer }) => {
   const [time, setTime] = useState(0);
+  const [pauseTime, setPauseTime] = useState(null);
+
 
   useEffect(() => {
-    // 로그인 시간 불러오기
     const loginTime = localStorage.getItem('loginTime');
 
     if (!loginTime) {
-      // 처음 로그인 했을 경우 현재 시간 저장
       localStorage.setItem('loginTime', Date.now());
     } else {
-      // 로그인 이후 경과 시간 계산
-      const elapsedSec = Math.floor((Date.now() - loginTime) / 1000);
+      let elapsedSec;
+      if (pauseTime) {
+        elapsedSec = Math.floor((pauseTime - loginTime) / 1000);
+      } else {
+        elapsedSec = Math.floor((Date.now() - loginTime) / 1000);
+      }
       setTime(elapsedSec);
     }
 
-    const intervalId = setInterval(() => setTime(prevTime => prevTime + 1), 1000);
+    const intervalId = setInterval(() => {
+      if (!isTimerPaused) {
+        setTime(prevTime => prevTime + 1);
+      }
+    }, 1000);
 
     return () => {
       clearInterval(intervalId);
     };
-  }, []);
+  }, [isTimerPaused, pauseTime]);
 
   const handleLogout = () => {
     onLogout(time);
-    localStorage.removeItem('loginTime'); // 로그아웃 시점에 로그인 시간 삭제
+    localStorage.removeItem('loginTime');
+    localStorage.removeItem('pauseTime');
   };
+  function secondsToHMS(seconds) {
+    const hours = Math.floor(seconds / 3600);
+    const minutes = Math.floor((seconds % 3600) / 60);
+    const secs = seconds % 60;
+
+    return [hours, minutes, secs].map(v => v < 10 ? '0' + v : v).join(':');
+  }
+
+
 
   return (
     <>
       <div style={{ position: 'absolute', right: 100, top: 200, padding: 20 }}>
         <h1>반갑습니다 {userEmail} 님!</h1>
-        <h2>업무시간: {time}</h2>
+        <h2>업무시간: {secondsToHMS(time)}</h2>
+        {!isTimerPaused ? (
+          <button
+            onClick={onPauseTimer}
+            style={{
+              borderRadius: '10px',
+              padding: '10px 20px',
+              fontSize: '16px',
+              backgroundColor: '#0379E5',
+              color: '#ffffff',
+              cursor: 'pointer',
+            }}
+          >
+            타이머 일시 정지
+          </button>
+        ) : (
+          <button
+            onClick={onResumeTimer}
+            style={{
+              borderRadius: '10px',
+              padding: '10px 20px',
+              fontSize: '16px',
+              backgroundColor: '#0379E5',
+              color: '#ffffff',
+              cursor: 'pointer',
+            }}
+          >
+            타이머 재개
+          </button>
+        )}
         <button
           onClick={handleLogout}
           style={{
@@ -70,7 +117,9 @@ const Sidebar = ({ userEmail, onLogout }) => {
             color: '#ffffff',
             cursor: 'pointer',
           }}
-        >업무종료</button>
+        >
+          업무종료
+        </button>
       </div>
       <div style={{ position: 'absolute', left: 500, bottom: 180, padding: 20 }}>
         <h1>회의실 1</h1>
@@ -96,13 +145,14 @@ const Sidebar = ({ userEmail, onLogout }) => {
 
 
 const VirtualOffice = () => {
-  const [userEmail, setUserEmail] = useState(''); // 초기값을 빈 문자열로 설정
+  const [userEmail, setUserEmail] = useState('');
   const [position, setPosition] = useState(START_POSITION);
   const [tileSize, setTileSize] = useState(
     Math.min(Math.floor(window.innerWidth / BOARD_SIZE), Math.floor(window.innerHeight / BOARD_SIZE))
   );
   const [positions, setPositions] = useState({});
   const [clientId, setClientId] = useState(null);
+  const [isTimerPaused, setIsTimerPaused] = useState(false);
   const navigate = useNavigate();
 
   const socket = io('http://localhost:8000');
@@ -115,13 +165,27 @@ const VirtualOffice = () => {
     setUserEmail('');
     console.log(`${userEmail}, 고생하셨습니다!`);
 
-    // 로컬 스토리지에서 이메일 값 제거
-    localStorage.removeItem("email");
+    localStorage.removeItem('email');
 
-    // 메인페이지로 이동
     navigate("/");
   };
 
+  const handleTimerPause = () => {
+    setIsTimerPaused(true);
+    localStorage.setItem('pauseTime', Date.now());
+  };
+
+  const handleTimerResume = () => {
+    setIsTimerPaused(false);
+    const pauseTime = localStorage.getItem('pauseTime');
+    if (pauseTime) {
+      const resumeTime = Date.now();
+      const pauseDuration = resumeTime - pauseTime;
+      const loginTime = localStorage.getItem('loginTime');
+      localStorage.setItem('loginTime', Number(loginTime) + pauseDuration);
+      localStorage.removeItem('pauseTime');
+    }
+  };
   useEffect(() => {
     socket.on('connect', () => {
       setClientId(socket.id);
@@ -164,23 +228,39 @@ const VirtualOffice = () => {
       window.removeEventListener("resize", handleResize);
     };
   }, []);
+
   useEffect(() => {
     let shouldGoBack = false;
-    // Check if the position is in the 'go back' office area
+    let shouldPauseTimer = false;
+
     for (let office of OFFICES) {
       if (
         position[0] >= office.x && position[1] >= office.y &&
-        position[0] < office.x + office.width && position[1] < office.y + office.height &&
-        office.goBack
+        position[0] < office.x + office.width && position[1] < office.y + office.height
       ) {
-        shouldGoBack = true;
-        break;
+        if (office.goBack) {
+          shouldGoBack = true;
+        }
+
+        // Check if the current office has a color of 'cyan'
+        if (office.color === 'cyan') {
+          shouldPauseTimer = true;
+        }
       }
     }
 
     if (shouldGoBack) {
       window.history.back();
     }
+
+    if (shouldPauseTimer) {
+      handleTimerPause();
+    } else {
+      handleTimerResume();
+    }
+
+    // If the position is in the 'cyan' office, pause the timer
+    setIsTimerPaused(shouldPauseTimer);
   }, [position]);
 
   useEffect(() => {
@@ -197,7 +277,6 @@ const VirtualOffice = () => {
 
   useEffect(() => {
     let roomnumber = null;
-    // Check if the position is in any of the office areas with room numbers
     for (let office of OFFICES) {
       if (
         position[0] >= office.x && position[1] >= office.y &&
@@ -215,7 +294,6 @@ const VirtualOffice = () => {
   }, [position, navigate]);
 
   useEffect(() => {
-    // 로컬 스토리지에서 이메일 값을 가져옴
     const storedEmail = localStorage.getItem("email");
     if (storedEmail) {
       setUserEmail(storedEmail);
@@ -227,7 +305,6 @@ const VirtualOffice = () => {
     for (let x = 0; x < BOARD_SIZE; x++) {
       const key = `${y}-${x}`;
       let color = 'white';
-      // Check if the tile is in any of the office areas
       for (let office of OFFICES) {
         if (x >= office.x && y >= office.y && x < office.x + office.width && y < office.y + office.height) {
           color = office.color;
@@ -258,6 +335,8 @@ const VirtualOffice = () => {
     return color;
   }
 
+
+
   function stringToColor(str) {
     let hash = 0;
     for (let i = 0; i < str.length; i++) {
@@ -275,7 +354,15 @@ const VirtualOffice = () => {
         gridTemplateRows: `repeat(${BOARD_SIZE}, ${tileSize}px)`,
       }}
     >
-      {userEmail && <Sidebar userEmail={userEmail} onLogout={handleLogout} />}
+      {userEmail && (
+        <Sidebar
+          userEmail={userEmail}
+          onLogout={handleLogout}
+          isTimerPaused={isTimerPaused}
+          onPauseTimer={handleTimerPause}
+          onResumeTimer={handleTimerResume}
+        />
+      )}
       {grid}
       {Object.entries(positions).map(([id, pos]) => (
         <span
