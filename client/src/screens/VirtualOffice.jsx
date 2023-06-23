@@ -6,14 +6,14 @@ const BOARD_SIZE = 30;
 const OFFICES = [
   { x: 20, y: 0, width: 15, height: 13, color: 'yellow', roomnumber: 3 },  // No action for this office
   { x: 0, y: 20, width: 20, height: 10, color: 'lightblue', roomnumber: 2 },
-  { x: 0, y: 0, width:20, height: 10, color: 'lightgreen', roomnumber: 4 },
+  { x: 0, y: 0, width: 20, height: 10, color: 'lightgreen', roomnumber: 4 },
   { x: 10, y: 10, width: 10, height: 10, color: 'lightgray' },  // No action for this office
   { x: 20, y: 5, width: 10, height: 25, color: 'lightsalmon', roomnumber: 1 },
-  { x: 0, y: 10, width: 10, height: 5, color: 'cyan'},
+  { x: 0, y: 10, width: 10, height: 5, color: 'cyan' },
   { x: 0, y: 15, width: 1, height: 5, color: 'red', goBack: true },
 ];
 
-const emojis = ["😀", "😃", "😄", "😁", "😆", "😅", "😂", "🤣", "😊", "😇","😉", "😌", "😍", "🥰", "😘", "😗", "😙", "😚", "🙂", "🤗",
+const emojis = ["😀", "😃", "😄", "😁", "😆", "😅", "😂", "🤣", "😊", "😇", "😉", "😌", "😍", "🥰", "😘", "😗", "😙", "😚", "🙂", "🤗",
   "🤩", "🤔", "🤨", "😐", "😑", "😶", "😏", "😒", "🙄", "😬",
   "🤥", "😌", "😔", "😪", "🤤", "😴", "😷", "🤒", "🤕", "🤢",
   "🤮", "🤧", "😵", "🤯", "🥵", "😰", "😨", "😥", "🥴", "😓",
@@ -56,21 +56,41 @@ const Sidebar = ({ userEmail, onLogout }) => {
   };
 
   return (
-    <div style={{ position: 'absolute', right: 0, padding: 20 }}>
-      <h1>반갑습니다 {userEmail} 님!</h1>
-      <h2>업무시간: {time}</h2>
-      <button
-        onClick={handleLogout}
-        style={{
-          borderRadius: '10px',
-          padding: '10px 20px',
-          fontSize: '16px',
-          backgroundColor: '#0379E5',
-          color: '#ffffff',
-          cursor: 'pointer',
-        }}
-      >업무종료</button>
-    </div>
+    <>
+      <div style={{ position: 'absolute', right: 100, top: 200, padding: 20 }}>
+        <h1>반갑습니다 {userEmail} 님!</h1>
+        <h2>업무시간: {time}</h2>
+        <button
+          onClick={handleLogout}
+          style={{
+            borderRadius: '10px',
+            padding: '10px 20px',
+            fontSize: '16px',
+            backgroundColor: '#0379E5',
+            color: '#ffffff',
+            cursor: 'pointer',
+          }}
+        >업무종료</button>
+      </div>
+      <div style={{ position: 'absolute', left: 500, bottom: 180, padding: 20 }}>
+        <h1>회의실 1</h1>
+      </div>
+      <div style={{ position: 'absolute', left: 160, bottom: 80, padding: 20 }}>
+        <h1>회의실 2</h1>
+      </div>
+      <div style={{ position: 'absolute', left: 500, top: 80, padding: 20 }}>
+        <h1>회의실 3</h1>
+      </div>
+      <div style={{ position: 'absolute', left: 150, top: 50, padding: 20 }}>
+        <h1>회의실 4</h1>
+      </div>
+      <div style={{ position: 'absolute', left: 45, top: 220, padding: 20 }}>
+        <h1>휴게실</h1>
+      </div>
+      <div style={{ position: 'absolute', left: 280, top: 220, padding: 20 }}>
+        <h1>사무실</h1>
+      </div>
+    </>
   );
 };
 
@@ -90,14 +110,14 @@ const VirtualOffice = () => {
   const handleLogout = (time) => {
     const date = new Date();
     const currentTime = `${date.getHours()}:${date.getMinutes()}:${date.getSeconds()}`;
-  
+
     alert(`업무시간: ${time}, 업무 종료시간: ${currentTime}`);
     setUserEmail('');
     console.log(`${userEmail}, 고생하셨습니다!`);
-  
+
     // 로컬 스토리지에서 이메일 값 제거
     localStorage.removeItem("email");
-  
+
     // 메인페이지로 이동
     navigate("/");
   };
@@ -219,7 +239,7 @@ const VirtualOffice = () => {
           key={key}
           style={{
             backgroundColor: color,
-            border: "1px solid black",
+            // border: "1px solid black",
             width: `${tileSize}px`,
             height: `${tileSize}px`,
             boxSizing: "border-box",
