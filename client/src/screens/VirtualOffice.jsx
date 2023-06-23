@@ -43,7 +43,7 @@ const VirtualOffice = () => {
     socket.on('connect', () => {
       setClientId(socket.id);
     });
-  }, []);
+  }, [socket]);
 
   useEffect(() => {
     const handleKeyDown = (e) => {
