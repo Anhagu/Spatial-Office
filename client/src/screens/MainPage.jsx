@@ -57,8 +57,7 @@ const MainPage = () => {
           </ContentText>
         </ContentContainer>
 
-        <FaceCallButton onClick={handleButtonClick}>화상통화방</FaceCallButton>
-        <div style={{ display: "flex", justifyContent: "center", alignItem: "center", backgroundColor: "#34d188", height: "196 px" }}>
+        <div style={{ display: "flex", justifyContent: "center", alignItem: "center", backgroundColor: "#3bc484", height: "160px" }}>
           <ConnectOfficeButton onClick={handleOfficeClick}>시작하기</ConnectOfficeButton>
         </div>
       </Container>
@@ -69,7 +68,7 @@ const MainPage = () => {
 const Container = styled.div`
   display: flex;
   flex-direction: column;
-  width: 100vw;
+  width: 100%;
   height: 100vh;
 `;
 
@@ -77,15 +76,16 @@ const HeaderContainer = styled.div`
   display: flex;
   flex-direction: row;
   align-items: center;
-  width: 100vw;
-  height: 70px;
-  background-color: #ff4e4e;
+  width: 100%;
+  height: 60px;
+  background-color: #5898ff;
 `;
 
 const Logo = styled.div`
   display: flex;
-  font-size: 32px;
+  font-size: 28px;
   font-weight: bold;
+  width: 180px;
   margin-left: 30px;
 `;
 
@@ -94,13 +94,13 @@ const LoginButton = styled.div`
   justify-content: center;
   align-items: center;
   height: 30px;
-  width: 100px;
+  width: 80px;
   font-size: 20px;
   font-weight: bold;
+  cursor: pointer;
   background-color: #D9D9D9;
   border-radius: 7px;
-  margin-right: 10px;
-  margin-left: 77vw;
+  margin-left: 1120px;  
 `;
 
 const SignupButton = styled.div`
@@ -111,21 +111,23 @@ const SignupButton = styled.div`
   width: 100px;
   font-size: 20px;
   font-weight: bold;
+  cursor: pointer;
   background-color: #D9D9D9;
   border-radius: 7px;
+  margin-left: 10px;
   
 `;
 
 const ContentContainer = styled.div`
   display: flex;
   align-items: flex-start;
-  width: 100vw;
+  width: 100%;
   height: 70vh;
   position: relative;
-  background-color: #76b1e8;
+  background-color: #b5ccfd;
   .webRTCImage {
-    width: 100vw;
-    height: 45vh;
+    width: 100%;
+    height: 400px;
 }
 `;
 
@@ -133,14 +135,10 @@ const ContentText = styled.div`
   display: flex;
   align-items: flex-end;
   justify-content: center;
-  height: 64vh;
+  height: 480px;
   width: 100vw;
   font-size: 2vw;
   position: absolute;
-  
-`;
-
-const FaceCallButton = styled.div`
   
 `;
 
@@ -152,6 +150,7 @@ const ConnectOfficeButton = styled.div`
   height: 8vh;
   font-size: xx-large;
   font-weight: bolder;
+  cursor: pointer;
   border-radius: 20px;
   margin-top: 50px;
   background-color: #0379E5;
