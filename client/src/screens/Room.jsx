@@ -2,6 +2,8 @@ import React, { useEffect, useCallback, useState } from "react";
 import ReactPlayer from "react-player";
 import peer from "../service/peer";
 import { useSocket } from "../context/SocketProvider";
+import { useLocation } from "react-router-dom";
+import styled from 'styled-components';
 
 const RoomPage = () => {
   const socket = useSocket();
@@ -14,6 +16,9 @@ const RoomPage = () => {
 
   const [messages, setMessages] = useState([]);
   const [newMessage, setNewMessage] = useState('');
+
+  const location = useLocation();
+  const room = location.state?.roomnumber;
 
   const toggleScreenSharing = async () => {
     try {
@@ -36,20 +41,19 @@ const RoomPage = () => {
     }
   };
 
-
   const handleUserJoined = useCallback(async ({ email, id }) => {
-  console.log(`Email ${email} joined room`);
-  setRemoteSocketId(id);
+    console.log(`Email ${email} joined room`);
+    setRemoteSocketId(id);
 
-  // 새로운 사용자가 방에 들어오면 자동으로 호출을 시작
-  const stream = await navigator.mediaDevices.getUserMedia({
-    audio: true,
-    video: true,
-  });
-  const offer = await peer.getOffer();
-  socket.emit("user:call", { to: id, offer });
-  setMyStream(stream);
-}, [socket]);
+    // 새로운 사용자가 방에 들어오면 자동으로 호출을 시작
+    const stream = await navigator.mediaDevices.getUserMedia({
+      audio: true,
+      video: true,
+    });
+    const offer = await peer.getOffer();
+    socket.emit("user:call", { to: id, offer });
+    setMyStream(stream);
+  }, [socket]);
   const handleCallUser = useCallback(async () => {
     const stream = await navigator.mediaDevices.getUserMedia({
       audio: true,
@@ -146,8 +150,13 @@ const RoomPage = () => {
   ]);
   const handleSendMessage = (e) => {
     e.preventDefault();
-    socket.emit('chatMessage', newMessage);
-    setNewMessage('');
+    const message = newMessage.trim();
+    if (message !== '') {
+      const formattedMessage = `${message}`; // [나] 표시를 추가한 형식의 메시지 생성
+      socket.emit('chatMessage', formattedMessage);
+      setMessages((prevMessages) => [...prevMessages, formattedMessage]); // 포맷된 메시지를 messages에 추가
+      setNewMessage('');
+    }
   };
   useEffect(() => {
     socket.on('chatMessage', (message) => {
@@ -161,39 +170,52 @@ const RoomPage = () => {
 
   return (
     <div>
-      <h1>Room Page</h1>
-      <h4>{remoteSocketId ? "Connected" : "No one in room"}</h4>
-      {myStream && <button onClick={sendStreams}>Send Stream</button>}
-      {remoteSocketId && <button onClick={handleCallUser}>CALL</button>}
-      <button onClick={toggleScreenSharing}>
-        {screenSharing ? "Stop Sharing" : "Share Screen"}
-      </button>
-      <p>{screenSharing ? "Screen is being shared" : ""}</p>
-      {myStream && (
-        <>
-          <h1>My Stream</h1>
-          <ReactPlayer
-            playing
-            height="100px"
-            width="200px"
-            url={myStream}
-          />
-        </>
-      )}
-      {remoteStream && (
-        <>
-          <h1>Remote Stream</h1>
-          <ReactPlayer
-            playing
-            height="100px"
-            width="200px"
-            url={remoteStream}
-          />
-        </>
-      )}
+      <Header>
+        <h1>회의실 {`${room}`}</h1>
+      </Header>
+
+      <ConnectStatus>
+        <h4>{remoteSocketId ? "연결되었습니다" : "접속중인 유저가 없습니다"}</h4>
+      </ConnectStatus>
+
+      <ButtonContainer>
+        {myStream && <SendStreamButton onClick={sendStreams}>내 화면 공유하기</SendStreamButton>}
+        {remoteSocketId && <CallButton onClick={handleCallUser}>화상통과 걸기</CallButton>}
+        <ScreenShareButton onClick={toggleScreenSharing}>
+          {screenSharing ? "화면공유 중지" : "화면공유"}
+        </ScreenShareButton>
+      </ButtonContainer>
+
+      <p>{screenSharing ? "화면공유중 입니다" : ""}</p>
+      <VideoContainer>
+        {myStream && (
+          <MyStreamContainer>
+
+            <Video>
+              <ReactPlayer
+                playing
+                url={myStream}
+              />
+            </Video>
+            <MyStreamText>내 영상</MyStreamText>
+          </MyStreamContainer>
+        )}
+        {remoteStream && (
+          <RemoteContainer>
+
+            <Video>
+              <ReactPlayer
+                playing
+                url={remoteStream}
+              />
+            </Video>
+            <RemoteText>상대방 영상</RemoteText>
+          </RemoteContainer>
+        )}
+      </VideoContainer>
       {screenStream && (
         <>
-          <h1>Screen Stream</h1>
+          <h1>화면 공유</h1>
           <ReactPlayer
             playing
             height="100px"
@@ -203,20 +225,164 @@ const RoomPage = () => {
         </>
       )}
       <form onSubmit={handleSendMessage}>
-        <input
-          type="text"
-          value={newMessage}
-          onChange={(e) => setNewMessage(e.target.value)}
-        />
-        <button type="submit">Send</button>
+        <SendContainer>
+          <input
+            type="text"
+            value={newMessage}
+            style={{ width: "65%", height: "40px", borderRadius: "12px", fontSize: "large" }}
+            onChange={(e) => setNewMessage(e.target.value)}
+          />
+          <SendButton type="submit" onClick={handleSendMessage}>전송</SendButton>
+        </SendContainer>
       </form>
-      <ul>
-        {messages.map((message, index) => (
-          <li key={index}>{message}</li>
-        ))}
-      </ul>
+      <ScrollContainer style={{ maxHeight: "90px", overflow: "auto" }}>
+        <ul style={{ listStyleType: "none" }}>
+          {messages.map((message, index) => (
+            <li key={index} style={{ color: message.includes('[나]') ? 'blue' : 'black' }}>{message}</li>
+          ))}
+        </ul>
+      </ScrollContainer>
     </div>
   );
 };
 
+const Header = styled.div`
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  width: 100%;
+  height: 60px;
+  background-color: #5898ff;
+`;
+
+const ConnectStatus = styled.div`
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  width: 100%;
+  height: 40px;
+  background-color: #23a756;
+`;
+
+const SendStreamButton = styled.div`
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  width: 150px;
+  height: 30px;
+  border-radius: 5px;
+  margin-left: 10px;
+  margin-right: 10px;
+  cursor: pointer;
+  background-color: #0379E5;
+`;
+
+const CallButton = styled.div`
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  width: 110px;
+  height: 30px;
+  border-radius: 5px;
+  margin-left: 10px;
+  margin-right: 10px;
+  cursor: pointer;
+  background-color: #0379E5;
+`;
+
+const ScreenShareButton = styled.div`
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  width: 150px;
+  height: 30px;
+  border-radius: 5px;
+  margin-left: 10px;
+  margin-right: 10px;
+  cursor: pointer;
+  background-color: #0379E5;
+`;
+
+const ButtonContainer = styled.div`
+  display: flex;
+  flex-direction: row;
+  justify-content: center;
+  align-items: center;
+  margin-top: 15px;
+`;
+
+const MyStreamContainer = styled.div`
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  width: 50%;
+`;
+
+const MyStreamText = styled.div`
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  width: 50%;
+`;
+
+const RemoteContainer = styled.div`
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  width: 50%;
+`;
+
+const RemoteText = styled.div`
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  width: 50%;
+`;
+
+const Video = styled.div`
+  display: flex;
+  justify-content: center;
+  align-items: center;
+`;
+
+const VideoContainer = styled.div`
+  display: flex;
+  flex-direction: row;
+  padding-bottom: 20px;
+`;
+
+const SendButton = styled.div`
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  width: 70px;
+  height: 40px;
+  border-radius: 11px;
+  margin-left: 10px;
+  cursor: pointer;
+  background-color: #23a756;
+`;
+
+const SendContainer = styled.div`
+  display: flex;
+  flex-direction: row;
+  justify-content: center;
+  align-items: center;
+`;
+
+const ScrollContainer = styled.div`
+  overflow-x:hidden;
+  overflow: scroll;
+  &::-webkit-scrollbar{
+    width: 8px;
+    border-radius: 6px;
+    background: rgba(255, 255, 255, 0.4);
+  }
+  &::-webkit-scrollbar-thumb{
+    border-radius: 6px;
+    background-color: rgba(0, 0, 0, 0.3);
+  }
+`;
 export default RoomPage;
