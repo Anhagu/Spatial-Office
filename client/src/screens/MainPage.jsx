@@ -50,7 +50,7 @@ const MainPage = () => {
         </HeaderContainer>
 
         <ContentContainer>
-          <img className="webRTCImage" alt="webRTC" src="../image/RTCPic.png" />
+          <img className="webRTCImage" alt="webRTC" src="../image/HomeOffice.png" />
           <ContentText>
             어디서나 간편한 직장생활<br />
             가상공간 사무실로 출근하여 현장감있는 업무를 경험해보세요
@@ -127,19 +127,20 @@ const ContentContainer = styled.div`
   background-color: #b5ccfd;
   .webRTCImage {
     width: 100%;
-    height: 400px;
+    height: 100%;
 }
 `;
 
 const ContentText = styled.div`
   display: flex;
-  align-items: flex-end;
+  align-items: center;
   justify-content: center;
   height: 480px;
   width: 100vw;
-  font-size: 2vw;
+  font-size: 2.2vw;
+  font-weight: bold;
   position: absolute;
-  
+  text-shadow: 1px 1px white;
 `;
 
 const ConnectOfficeButton = styled.div`
