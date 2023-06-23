@@ -4,11 +4,11 @@ import io from 'socket.io-client';
 
 const BOARD_SIZE = 30;
 const OFFICES = [
-  { x: 20, y: 0, width: 15, height: 13, color: 'yellow',roomnumber: 3 },  // No action for this office
+  { x: 20, y: 0, width: 15, height: 13, color: 'yellow', roomnumber: 3 },  // No action for this office
   { x: 0, y: 20, width: 20, height: 10, color: 'lightblue', roomnumber: 2 },
   { x: 0, y: 0, width:20, height: 10, color: 'lightgreen', roomnumber: 4 },
   { x: 10, y: 10, width: 10, height: 10, color: 'lightgray' },  // No action for this office
-  { x: 20, y: 10, width: 10, height: 20, color: 'lightsalmon', roomnumber: 1 },
+  { x: 20, y: 5, width: 10, height: 25, color: 'lightsalmon', roomnumber: 1 },
   { x: 0, y: 10, width: 10, height: 5, color: 'cyan'},
   { x: 0, y: 15, width: 1, height: 5, color: 'red', goBack: true },
 ];
@@ -25,10 +25,58 @@ function getEmojiFromId(id) {
   return emojis[Math.abs(hash) % emojis.length];
 }
 
+const START_POSITION = [11, 16];
 
-const START_POSITION = [11, 16]; 
+const Sidebar = ({ userEmail, onLogout }) => {
+  const [time, setTime] = useState(0);
+
+  useEffect(() => {
+    // 로그인 시간 불러오기
+    const loginTime = localStorage.getItem('loginTime');
+
+    if (!loginTime) {
+      // 처음 로그인 했을 경우 현재 시간 저장
+      localStorage.setItem('loginTime', Date.now());
+    } else {
+      // 로그인 이후 경과 시간 계산
+      const elapsedSec = Math.floor((Date.now() - loginTime) / 1000);
+      setTime(elapsedSec);
+    }
+
+    const intervalId = setInterval(() => setTime(prevTime => prevTime + 1), 1000);
+
+    return () => {
+      clearInterval(intervalId);
+    };
+  }, []);
+
+  const handleLogout = () => {
+    onLogout(time);
+    localStorage.removeItem('loginTime'); // 로그아웃 시점에 로그인 시간 삭제
+  };
+
+  return (
+    <div style={{ position: 'absolute', right: 0, padding: 20 }}>
+      <h1>반갑습니다 {userEmail} 님!</h1>
+      <h2>업무시간: {time}</h2>
+      <button
+        onClick={handleLogout}
+        style={{
+          borderRadius: '10px',
+          padding: '10px 20px',
+          fontSize: '16px',
+          backgroundColor: '#0379E5',
+          color: '#ffffff',
+          cursor: 'pointer',
+        }}
+      >업무종료</button>
+    </div>
+  );
+};
+
 
 const VirtualOffice = () => {
+  const [userEmail, setUserEmail] = useState(''); // 초기값을 빈 문자열로 설정
   const [position, setPosition] = useState(START_POSITION);
   const [tileSize, setTileSize] = useState(
     Math.min(Math.floor(window.innerWidth / BOARD_SIZE), Math.floor(window.innerHeight / BOARD_SIZE))
@@ -38,6 +86,21 @@ const VirtualOffice = () => {
   const navigate = useNavigate();
 
   const socket = io('http://localhost:8000');
+
+  const handleLogout = (time) => {
+    const date = new Date();
+    const currentTime = `${date.getHours()}:${date.getMinutes()}:${date.getSeconds()}`;
+  
+    alert(`업무시간: ${time}, 업무 종료시간: ${currentTime}`);
+    setUserEmail('');
+    console.log(`${userEmail}, 고생하셨습니다!`);
+  
+    // 로컬 스토리지에서 이메일 값 제거
+    localStorage.removeItem("email");
+  
+    // 메인페이지로 이동
+    navigate("/");
+  };
 
   useEffect(() => {
     socket.on('connect', () => {
@@ -94,7 +157,7 @@ const VirtualOffice = () => {
         break;
       }
     }
-  
+
     if (shouldGoBack) {
       window.history.back();
     }
@@ -130,6 +193,14 @@ const VirtualOffice = () => {
       navigate("/Lobby", { state: { roomnumber: roomnumber } });
     }
   }, [position, navigate]);
+
+  useEffect(() => {
+    // 로컬 스토리지에서 이메일 값을 가져옴
+    const storedEmail = localStorage.getItem("email");
+    if (storedEmail) {
+      setUserEmail(storedEmail);
+    }
+  }, []);
 
   const grid = [];
   for (let y = 0; y < BOARD_SIZE; y++) {
@@ -184,26 +255,26 @@ const VirtualOffice = () => {
         gridTemplateRows: `repeat(${BOARD_SIZE}, ${tileSize}px)`,
       }}
     >
+      {userEmail && <Sidebar userEmail={userEmail} onLogout={handleLogout} />}
       {grid}
       {Object.entries(positions).map(([id, pos]) => (
-  <span
-    key={id}
-    style={{
-      position: "absolute",
-      left: `${pos[0] * tileSize}px`,
-      top: `${pos[1] * tileSize}px`,
-      width: `${tileSize}px`,
-      height: `${tileSize}px`,
-      display: "flex",
-      alignItems: "center",
-      justifyContent: "center",
-      fontSize: `${tileSize}px`,
-    }}
-  >
-    {getEmojiFromId(id)}
-  </span>
-))}
-
+        <span
+          key={id}
+          style={{
+            position: "absolute",
+            left: `${pos[0] * tileSize}px`,
+            top: `${pos[1] * tileSize}px`,
+            width: `${tileSize}px`,
+            height: `${tileSize}px`,
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            fontSize: `${tileSize}px`,
+          }}
+        >
+          {getEmojiFromId(id)}
+        </span>
+      ))}
     </div>
   );
 };
