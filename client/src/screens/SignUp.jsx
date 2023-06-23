@@ -79,18 +79,6 @@ const Signup = () => {
                             />
                         </div>
 
-                        <div style={{float:"right", marginRight:"42px"}}>
-                            <label htmlFor="user-color">
-                                유저 색상 : {" "}
-                            </label>
-                            <input
-                                type="color"
-                                id="user-color"
-                                value={userColor}
-                                onChange={(e) => setUserColor(e.target.value)}
-                            />
-                        </div>
-
                         <div>
                             <button onClick={onSubmit} style={{
                                 marginTop: "28px",

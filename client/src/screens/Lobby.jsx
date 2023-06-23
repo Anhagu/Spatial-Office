@@ -66,7 +66,7 @@ const LobbyScreen = () => {
           textAlign: "center",
           position: "relative"
         }}>
-
+          
           <BackSpace type="button" onClick={() => navigate(-1)}>{"<"}</BackSpace>
 
           <LobyText>회의실 입장</LobyText>
